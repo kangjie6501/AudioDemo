@@ -1,5 +1,6 @@
 package com.kj.audiodemo;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import com.kj.audiodemo.AudioCapturer.OnAudioFrameCapturedListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -20,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     private String name = "abc.pcm";
     private File mFile;
     private ByteArrayOutputStream mByteArrayOutputStream;
+
+    private AudioPlayer audioPlayer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 pcmToWavUtil.pcmToWav(pcm,wav);
                 break;
             case R.id.id_delete:
+                mFile = new File(path+name);
                 if (mFile!=null){
                     if (mFile.exists()){
                         mFile.delete();
@@ -87,6 +92,13 @@ public class MainActivity extends AppCompatActivity {
 
                 }
                 break;
+            case R.id.id_plaly:
+                Intent intent = new Intent(this,PlayAudioActivity.class);
+                startActivity(intent);
+               /* audioPlayer = new AudioPlayer();
+                audioPlayer.startPlayer();
+                new Player().start();*/
+                break;
             default:
                 break;
         }
@@ -97,4 +109,30 @@ public class MainActivity extends AppCompatActivity {
            mCapturer.stopCapture();
        }
     }
+
+    class Player extends Thread{
+        byte[] data1=new byte[audioPlayer.getMinBufferSize()];
+        File file=new File(path+name);
+        int off1=0;
+        FileInputStream fileInputStream;
+
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            super.run();
+            while(true){
+                try {
+                    fileInputStream=new FileInputStream(file);
+                    fileInputStream.skip((long)off1);
+                    fileInputStream.read(data1,0,audioPlayer.getMinBufferSize());
+                    off1 +=audioPlayer.getMinBufferSize();
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+           //     audioPlayer.write(data1, offset, audioBufSize * 2);
+                audioPlayer.play(data1,off1,audioPlayer.getMinBufferSize());
+            }
+        }
+    }
+
 }
